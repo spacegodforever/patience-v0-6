@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Wrapper so `scripts/patience init` works without installing the package.
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+exec "${PYTHON:-python3}" "$DIR/patience_cli.py" "$@"

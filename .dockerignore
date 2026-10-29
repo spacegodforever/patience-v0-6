@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+.pytest_cache
+*.lock
+.env
+patience_state.json
+agents.yaml
+approvers.yaml
+patience_audit.jsonl*
+policy.yaml

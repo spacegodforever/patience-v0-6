@@ -1,0 +1,8 @@
+[browser]
+gatherUsageStats = false
+
+[server]
+# Localhost only. Exposing the dashboard to a network is a deliberate choice: put it behind
+# TLS + a reverse proxy and keep PATIENCE_DASHBOARD_PASSWORD set.
+address = "127.0.0.1"
+headless = true

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "patience"
+version = "0.6.0"
+description = "PATIENCE: a governance gate that makes AI agents ask before risky actions."
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+patience = "patience_cli:main"
+patience-mcp = "patience_mcp:main"
+
+[tool.setuptools]
+py-modules = ["patience_cli", "patience_mcp", "api", "approvers", "audit", "decisions", "links", "notify",
+              "previews", "reconcile", "dashboard_ops", "dashboard_auth", "engine", "identity", "models",
+              "memory_store", "risk_policy", "governance", "adapters", "llm_adapter", "second_opinion",
+              "oracle", "scheduler", "worker", "envfile"]
+packages = ["executors"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }

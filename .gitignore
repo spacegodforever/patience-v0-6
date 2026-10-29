@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local runtime state. The example file is the template.
+patience_state.json
+trigger_queue.jsonl
+trigger_done.json
+latest_trigger_prompt.txt
+.env
+*.lock
+.patience_*.tmp
+
+# Agent API keys (hashed, but still private). Template: agents.example.yaml
+agents.yaml
+
+# v0.6 private/runtime files
+approvers.yaml
+patience_audit.jsonl
+patience_audit.jsonl.head
+policy.yaml
+policies/*.bak
+*.egg-info/

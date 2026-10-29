@@ -1,0 +1,30 @@
+# docker compose up --build
+# First run: docker compose run --rm api python patience_cli.py init --generate-password --pin --agent my-agent
+# Ports are published on 127.0.0.1 only; put a TLS reverse proxy in front to expose them.
+x-common: &common
+  build: .
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    - patience-data:/data
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *common
+    # ONE api process owns crash recovery (startup reconcile); don't scale this service.
+    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8765", "--workers", "1"]
+    ports: ["127.0.0.1:8765:8765"]
+  dashboard:
+    <<: *common
+    command: ["python", "-m", "streamlit", "run", "dashboard.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+    ports: ["127.0.0.1:8501:8501"]
+    depends_on: [api]
+  worker:
+    <<: *common
+    command: ["python", "worker.py"]
+    depends_on: [api]
+
+volumes:
+  patience-data:

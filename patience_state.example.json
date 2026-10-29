@@ -1,0 +1,20 @@
+{
+  "version": "0.3",
+  "mission": "Build PATIENCE into a governed proactive decision system.",
+  "end_state": "A persistent, time-aware system that observes, challenges, decides, verifies, and remembers.",
+  "current_objective": "Validate the PATIENCE v0.3 control architecture.",
+  "priority": "Decision integrity before autonomous reach.",
+  "observations": [],
+  "assessments": [],
+  "model_votes": [],
+  "decisions": [],
+  "tasks": [],
+  "risks": [],
+  "assumptions": [],
+  "unknowns": [],
+  "authorized_actions": [],
+  "blocked_actions": [],
+  "memory": [],
+  "next_checkpoint": "",
+  "last_updated": ""
+}

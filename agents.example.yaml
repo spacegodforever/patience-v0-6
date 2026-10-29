@@ -1,0 +1,11 @@
+# Per-agent API keys. Do NOT hand-edit hashes: create keys with
+#   python identity.py add support-bot --industry retail
+# which prints the key ONCE and stores only its sha256 here (file: agents.yaml,
+# or the path in PATIENCE_AGENTS). Revoke with: python identity.py revoke support-bot
+agents:
+  support-bot:
+    key_sha256: "replace-with-output-of-identity-py"
+    industry: retail
+  ops-bot:
+    key_sha256: "replace-with-output-of-identity-py"
+    disabled: true

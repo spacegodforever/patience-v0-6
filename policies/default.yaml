@@ -1,0 +1,175 @@
+# PATIENCE governance policy. Loaded at startup by oracle.py.
+# Override with PATIENCE_POLICY=/path/to/other.yaml. Words are matched after
+# lowercasing, accent stripping, typo correction and simple stemming, so list
+# base forms ("refund" also matches "refunds", "refunded", "refnd").
+version: 1
+
+thresholds:
+  mass_recipients: 10        # N recipients at or above this = mass communication
+  default_consequence: 0.25  # score when nothing risky is detected
+  unknown_side_effect: 0.7   # action verb with side effects but no known category
+
+# Verbs that only read, think or draft. A clause led by one of these is safe
+# unless it chains into an action ("summarize X and send it").
+read_only_verbs: [read, summarize, summarise, summary, review, list, show, count, check, analyze, analyse,
+  report, preview, draft, write, compose, outline, brainstorm, plan, find, search, look, explain, describe,
+  compare, calculate, estimate, verify, monitor, view, see, tell, recommend, suggest, proofread, translate,
+  organize, organise, remind, note, research, audit, inspect, track, display, help, what, whats, how, hows,
+  who, whos, when, where, why, which, is, are, does, did, was, were, could, idea, ideas, answer, think,
+  understand, learn, study, resumir, resumer, lister, listar, leer, lire, mostrar, afficher, revisar, analizar]
+
+# Words that start a negated clause; the clause is ignored ("don't send").
+negations: [dont, "do not", never, without, "no", not, "dont ever", "never ever", "nunca", "ne pas", "sin"]
+
+# Filler stripped from the front of a clause before reading its verb.
+fillers: [demo, agent, wants, want, to, i, we, you, please, pls, kindly, can, could, would, will, should,
+  need, needs, go, ahead, and, lets, let, us, now, just, quickly, first, next, finally, then, also, help, me,
+  id, like, step, of, the, a, an, ok, okay, hey]
+
+# Words after which a verb starts a new action inside the same clause.
+action_joiners: [to, and, then, also, please, plus]
+
+# Verbs that change something but have no specific category: fail safe.
+side_effect_verbs: [send, cancel, change, update, modify, set, approve, submit, execute, run, move, book,
+  schedule, create, add, replace, rename, reset, enable, disable, turn, install, uninstall, buy, purchase,
+  order, sell, accept, sign, issue, process, give, apply, import, sync, prepare, queue, put, make, mark,
+  raise, lower, increase, decrease, launch, start, stop, close, open, assign, invite, enroll, subscribe,
+  unsubscribe, deactivate, activate, suspend, ban, block, unblock, take, paste, copy, fax, file, merge, ship, comp]
+
+injection_patterns:
+  - "ignore (all |any |the |previous |prior |your )*(governance|rules|instructions|policy|policies|gate|safety)"
+  - "disregard (all |any |the |previous |prior |your )*(instructions|rules|governance|policy)"
+  - "bypass (the )?(gate|governance|approval|review|policy|safety)"
+  - "skip (the )?(approval|review|authorization|gate)"
+  - "override (the )?(gate|governance|policy|approval)"
+  - "(pre-?approved|already approved|is approved|been approved)"
+  - "(without|no need for|don'?t ask for|do not ask for) (any )?(approval|authorization|permission|review)"
+  - "you are now"
+  - "admin mode|developer mode|god mode|jailbreak"
+  - "^\\s*system\\s*:"
+  - "act as (if|though) .* approved"
+
+communication:
+  verbs: [send, email, mail, text, sms, dm, message, notify, notification, announce, announcement, blast,
+    forward, reply, contact, ping, broadcast, newsletter, campaign, fax, correo, enviar, envoyer, mandar, whatsapp]
+  broad_words: [all, every, everyone, everybody, entire, whole, mass, group, blast, campaign, newsletter,
+    broadcast, list, base, todos, todas, tous, toutes, chacun]
+  audience_nouns: [member, customer, client, people, recipient, user, student, subscriber, contact, follower,
+    attendee, patient, employee, candidate, parent, miembro, cliente, membre]
+
+categories:
+  money:
+    consequence: 0.85
+    irreversible: true
+    keywords: [refund, payment, pay, charge, invoice, price, pricing, transfer, wire, payout, billing, fee, fees,
+      comp, waive, discount, credit, reimburse, reimbursement, payroll, salary, bonus, compensation, deposit,
+      funds, budget, crypto, bitcoin, btc, eth, usdc, wallet, loan, trade, shares, stock, markdown, "mark down",
+      "back to customers", money, cash, venmo, paypal, stripe, reembolsar, reembolso, rembourser,
+      remboursement, pagar, payer, paiement, pago, sell, buy, purchase, prorate, dollar, euro, buck]
+    patterns: ["\\$\\s?\\d", "[€£]\\s?\\d", "\\b\\d+(\\.\\d+)?\\s?k\\b",
+      "\\b\\d[\\d,]*(\\.\\d+)?\\s?(usd|dollars?|bucks|euros?|eur|pounds|dolares|pesos)\\b",
+      "\\b\\d{3,}\\b.*\\b(back|savings|account|to)\\b", "\\b\\d+%"]
+  public_publishing:
+    consequence: 0.8
+    irreversible: true
+    keywords: [post, publish, tweet, instagram, facebook, tiktok, linkedin, youtube, "press release", blog,
+      website, social, "landing page", publicar, publier, upload, "go live"]
+  deploy:
+    consequence: 0.85
+    irreversible: true
+    keywords: [deploy, "push to prod", production, prod, release, "merge into main", "merge to main",
+      "go live", ship, rollout, "roll out", hotfix]
+  deletion:
+    consequence: 0.9
+    irreversible: true
+    keywords: [delete, remove, purge, drop, overwrite, wipe, erase, truncate, destroy, nuke, trash, shred,
+      "get rid of", "clean up", "tidy up", "clear out", prune, scrub, retire, sunset, "archive permanently",
+      "permanently archive", deactivate, eliminar, borrar, suprimir, supprimer, effacer, irreversible]
+  account_permissions:
+    consequence: 0.85
+    irreversible: false
+    keywords: [permission, admin, owner, role, grant, revoke, access, account, deactivate, suspend, ban,
+      invite, "add user", "remove user", cuenta, compte]
+  security:
+    consequence: 0.9
+    irreversible: true
+    keywords: [password, credential, "api key", key, token, secret, 2fa, mfa, "two factor", firewall, ssh,
+      publicly, public, "anyone with the link", encryption, vpn, rotate, expose]
+  pii_sensitive:
+    consequence: 0.9
+    irreversible: true
+    keywords: [ssn, "social security", patient, "medical record", medical, hipaa, phi, "date of birth",
+      "dates of birth", dob, "credit card", passport, "driver license", diagnosis, "health data",
+      "email list", "mailing list", "home address", "personal data", "pii"]
+  legal:
+    consequence: 0.85
+    irreversible: true
+    keywords: [contract, agreement, terms, nda, lease, settlement, sign, "accept terms", terminate,
+      termination, lawsuit, court, motion, counsel, trademark, patent, "demand letter", legal, vendor, agree]
+  injection:
+    consequence: 0.95
+    irreversible: true
+    keywords: []
+
+# Context-specific extras. An industry is active when one of its `detect`
+# words appears, or when the caller passes the tag "industry:<name>".
+industries:
+  healthcare:
+    detect: [patient, clinic, ehr, hipaa, "lab result", medication, dosage, discharge, prescription, nurse]
+    extra: {pii_sensitive: [lab, result, chart, ehr, medication, dosage, discharge, prescription, record]}
+  finance:
+    detect: [trade, shares, loan, ledger, portfolio, "account number", routing, reserve, funds]
+    extra: {money: [trade, shares, loan, ledger, reserve, operating, approve]}
+  retail:
+    detect: [inventory, "store credit", order, sku, cart, checkout]
+    extra: {money: [inventory, order, "store credit", cancel]}
+  hr:
+    detect: [employee, employment, salary, candidate, "offer letter", hire, payroll, intern]
+    extra: {legal: [terminate, fire, employment, "offer letter"], money: [salary, bonus]}
+  studio:
+    detect: [class, studio, member, attendee, lesson, "no-show", showcase]
+    extra: {money: ["no-show", deposit, membership]}
+  legal:
+    detect: [court, motion, counsel, lawsuit, filing, plaintiff, defendant]
+    extra: {legal: [file, filing, motion, letter]}
+
+# ---------------------------------------------------------------------------
+# Structured tool calls: POST /v1/check {"tool": "...", "args": {...}}
+# Scored from the real arguments. Anything not listed is fail-safe
+# (unknown_side_effect -> needs approval) unless it matches read_only_tool_prefixes.
+# auto_allow: the call is allowed on its own only if every condition holds;
+# rolling budgets below still apply to allowed calls.
+read_only_tool_prefixes: [get_, list_, search_, read_, fetch_, lookup_, summarize, draft_, preview_]
+tools:
+  send_email:
+    category: communication            # becomes mass_communication at >= thresholds.mass_recipients
+    recipients_arg: recipients         # list of addresses or an integer count
+    auto_allow: {max_recipients: 9}
+  send_message: {category: communication, recipients_arg: recipients, auto_allow: {max_recipients: 9}}
+  refund:
+    category: money
+    amount_arg: amount                 # per refund
+    count_arg: count                   # number of refunds (default 1)
+    auto_allow: {max_total: 200}       # amount * count
+  charge: {category: money, amount_arg: amount, count_arg: count}
+  transfer: {category: money, amount_arg: amount}
+  delete_records: {category: deletion, count_arg: count}
+  publish: {category: public_publishing}
+  deploy: {category: deploy}
+  grant_access: {category: account_permissions}
+  export_data: {category: pii_sensitive}
+
+# Rolling per-requester budgets (split-action evasion). Usage is recorded for
+# every allowed or approved call; a call that would push the window total past
+# max needs approval even when it is small on its own.
+# Budgets are keyed on the authenticated agent identity (agents.yaml), never on caller-supplied text.
+# "text" = free-text /v1/check calls and trigger_worker proposals (quantities parsed from the text).
+limits:
+  refunds_per_day:   {tools: [refund, charge, transfer, text], metric: amount_total, max: 2000, window_seconds: 86400}
+  messages_per_hour: {tools: [send_email, send_message, text], metric: recipients, max: 50, window_seconds: 3600}
+  deletes:           {tools: [delete_records], metric: count, max: 0, window_seconds: 86400}
+  actions_per_hour:  {tools: ["*"], metric: calls, max: 300, window_seconds: 3600}
+
+# Optional LLM second opinion (needs PATIENCE_LLM_API_KEY; off with PATIENCE_LLM_SECOND_OPINION=0).
+# It can only add a needs_approval, never remove one.
+second_opinion: {enabled: true}
