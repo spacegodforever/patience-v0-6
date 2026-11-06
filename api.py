@@ -24,7 +24,7 @@ import contextlib
 import json
 import os
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import base64
 from fastapi import Body, Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
@@ -39,6 +39,7 @@ import decisions
 import previews
 import links
 import notify
+import org_learning
 import html as _html
 from urllib.parse import parse_qs
 from fastapi import Request
@@ -128,6 +129,10 @@ class CheckIn(BaseModel):
     context: Optional[str] = Field(None, max_length=8000)
     requester: Optional[str] = Field(None, max_length=200)
     metadata: Optional[Dict[str, Any]] = None
+    # L0 org-decision learning (advisory tagging; does not bypass the gate)
+    situation_kind: Optional[str] = Field(None, max_length=40)
+    domain: Optional[str] = Field(None, max_length=80)
+    options: Optional[List[Dict[str, Any]]] = None
 
     @model_validator(mode="after")
     def _need_one(self):
@@ -135,6 +140,8 @@ class CheckIn(BaseModel):
             raise ValueError("Send either 'action' (text) or 'tool' (+ 'args').")
         if len(json.dumps(self.args or {}, default=str)) > 8000:
             raise ValueError("args too large")
+        if self.options is not None and len(json.dumps(self.options, default=str)) > 16000:
+            raise ValueError("options too large")
         return self
 
 
@@ -267,6 +274,32 @@ def _check_impl(body: CheckIn, caller: dict) -> dict:
                 type("D", (), {"action": "clarify"})(), action_desc, out["observation"]["id"])
         if decision == "defer":
             req["reason"] = f"Same action already awaiting approval (request {pending_same[0]['request_id']})."
+        # L0: tag unforeseen org decisions; persist episode + options (advisory only).
+        opts = org_learning.normalize_options(body.options)
+        domain = (body.domain or (body.metadata or {}).get("domain") or None)
+        if isinstance(domain, str):
+            domain = domain.strip()[:80] or None
+        else:
+            domain = None
+        cons = float(a.get("consequence", 0) or 0)
+        if org_learning.should_tag(situation_kind=body.situation_kind, options=opts, consequence=cons):
+            novelty = org_learning.novelty_for_domain(p.state.episodes, domain)
+            ep = org_learning.build_episode(
+                request_id=rid, action=action_desc, domain=domain, options=opts,
+                consequence=cons, risk_categories=cats, decision=decision,
+                approval_key=req["approval_key"], identity=who, novelty=novelty,
+                votes=out.get("model_votes"), assessment=a)
+            p.state.episodes.append(ep)
+            req["situation_kind"] = org_learning.ORG_KIND
+            req["domain"] = domain
+            req["options"] = opts
+            req["episode_id"] = ep["id"]
+            req["novelty"] = ep["novelty"]
+            audit.append("org_decision.tagged", who, request_id=rid, episode_id=ep["id"],
+                         domain=domain, novelty=ep["novelty"], n_options=len(opts),
+                         consequence=cons, gate_decision=decision)
+        else:
+            req["situation_kind"] = org_learning.ROUTINE_KIND
         p.state.requests[rid] = req
         p.memory_store.save(p.state)
     if decision in ("needs_approval", "clarify"):
@@ -279,8 +312,11 @@ def _check_impl(body: CheckIn, caller: dict) -> dict:
 @app.post("/v1/check")
 def check(body: CheckIn, caller: dict = Depends(require_caller)):
     req = _check_impl(body, caller)
-    return {k: req[k] for k in ("decision", "reason", "risk_categories", "irreversible", "flags", "details",
-                                "confidence", "request_id", "approval_key", "preview")}
+    keys = ["decision", "reason", "risk_categories", "irreversible", "flags", "details",
+            "confidence", "request_id", "approval_key", "preview", "situation_kind"]
+    if req.get("situation_kind") == org_learning.ORG_KIND:
+        keys += ["domain", "options", "episode_id", "novelty"]
+    return {k: req[k] for k in keys if k in req}
 
 
 def _get(p: Patience, rid: str, caller: Optional[dict] = None):
@@ -298,7 +334,10 @@ def status(rid: str, caller: dict = Depends(require_caller)):
     return {"request_id": rid, "status": _status(p.state, req), "decision": req["decision"],
             "action": req["action"], "approval_key": req["approval_key"], "reason": req["reason"],
             "args_hash": req.get("args_hash"), "execution": req.get("execution"), "preview": req.get("preview"),
-            "decided": req.get("decided")}
+            "decided": req.get("decided"),
+            "situation_kind": req.get("situation_kind"), "domain": req.get("domain"),
+            "options": req.get("options"), "episode_id": req.get("episode_id"),
+            "novelty": req.get("novelty")}
 
 
 class DecideIn(BaseModel):

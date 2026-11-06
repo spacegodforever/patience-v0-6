@@ -82,6 +82,7 @@ class PatienceState:
     pending_usage: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # approval_key -> usage recorded on approval
     executions: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # idempotency_key -> execution record
     approval_log: List[Dict[str, Any]] = field(default_factory=list)  # who approved/denied what, when, why
+    episodes: List[Dict[str, Any]] = field(default_factory=list)  # org-decision learning episodes (L0+)
     used_links: Dict[str, float] = field(default_factory=dict)  # signed-link nonce -> expiry (single use)
     next_checkpoint: str = ""
     last_updated: str = field(default_factory=now_iso)
